@@ -25,13 +25,17 @@ import com.google.firebase.database.ValueEventListener
 import com.smartambulance.driver.data.AdminSummary
 import com.smartambulance.driver.data.AppUser
 import com.smartambulance.driver.data.DemoRepository
+import com.smartambulance.driver.data.Hospital
 import com.smartambulance.driver.data.HospitalOption
 import com.smartambulance.driver.mqtt.MqttManager
 import com.smartambulance.driver.mqtt.MqttTopics
+import com.smartambulance.driver.services.HospitalDiscoveryService
+import com.smartambulance.driver.services.NavigationService
 import com.smartambulance.driver.ui.screens.AdminActions
 import com.smartambulance.driver.ui.screens.AdminScreen
 import com.smartambulance.driver.ui.screens.DriverScreen
 import com.smartambulance.driver.ui.screens.HospitalScreen
+import com.smartambulance.driver.ui.screens.HospitalSearchScreen
 import com.smartambulance.driver.ui.screens.LoginScreen
 import com.smartambulance.driver.ui.screens.PoliceScreen
 import com.smartambulance.driver.ui.theme.SmartAmbulanceTheme
@@ -40,6 +44,10 @@ class MainActivity : ComponentActivity() {
     private val repository = DemoRepository()
     private val locationHandler = Handler(Looper.getMainLooper())
     private lateinit var mqttManager: MqttManager
+    private lateinit var hospitalDiscoveryService: HospitalDiscoveryService
+    private lateinit var navigationService: NavigationService
+    
+    private var showHospitalSearch by mutableStateOf(false)
 
     private var userId by mutableStateOf("")
     private var pin by mutableStateOf("")
@@ -57,6 +65,7 @@ class MainActivity : ComponentActivity() {
     private var readiness by mutableStateOf("Mark each bay item as the receiving team gets ready.")
     private var adminMessage by mutableStateOf("Ready to register project data in Firebase.")
     private var adminRecords by mutableStateOf("Loading Firebase records...")
+    private var selectedGoogleHospital by mutableStateOf<Hospital?>(null)
 
     private var alertListener: ValueEventListener? = null
     private var ambulanceListener: ValueEventListener? = null
@@ -106,6 +115,10 @@ class MainActivity : ComponentActivity() {
         }
         mqttManager.connect()
         
+        // Initialize hospital discovery and navigation services
+        hospitalDiscoveryService = HospitalDiscoveryService(this)
+        navigationService = NavigationService(this)
+        
         repository.refreshDemoData { ok, result ->
             runOnUiThread {
                 message = if (ok) "$result Demo users are ready." else "Firebase write failed: $result"
@@ -131,6 +144,7 @@ class MainActivity : ComponentActivity() {
                         onStart = { startEmergency(current) },
                         onComplete = { completeEmergency(current) },
                         onNavigate = { openDirections(selectedHospital) },
+                        onSearchHospital = { showHospitalSearch = true },
                         onLogout = { logout() }
                     )
                     "police" -> PoliceScreen(
@@ -187,6 +201,28 @@ class MainActivity : ComponentActivity() {
                         }
                     )
                 }
+            }
+            
+            // Hospital search overlay
+            if (showHospitalSearch) {
+                HospitalSearchScreen(
+                    hospitalDiscoveryService = hospitalDiscoveryService,
+                    onHospitalSelected = { hospital ->
+                        selectedGoogleHospital = hospital
+                        // Convert Google Hospital to HospitalOption
+                        val hospitalOption = HospitalOption(
+                            id = hospital.placeId,
+                            name = hospital.name,
+                            distance = "${(hospital.distance / 1000).toInt()} km",
+                            eta = hospital.duration.ifEmpty { "Calculating..." },
+                            beds = 8 // Default value for OSM
+                        )
+                        selectedHospital = hospitalOption
+                        status = "Selected ${hospital.name} via Google Maps"
+                        showHospitalSearch = false
+                    },
+                    onBack = { showHospitalSearch = false }
+                )
             }
         }
     }

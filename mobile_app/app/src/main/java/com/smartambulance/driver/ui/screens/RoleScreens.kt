@@ -158,6 +158,7 @@ fun DriverScreen(
     onStart: () -> Unit,
     onComplete: () -> Unit,
     onNavigate: () -> Unit,
+    onSearchHospital: () -> Unit,
     onLogout: () -> Unit
 ) {
     Scaffold(
@@ -195,6 +196,16 @@ fun DriverScreen(
                     hospital.id == selectedHospital.id,
                     Crimson
                 ) { onHospital(hospital) }
+            }
+            FilledTonalButton(
+                onClick = onSearchHospital,
+                modifier = Modifier.fillMaxWidth().height(48.dp),
+                shape = RoundedCornerShape(14.dp),
+                colors = ButtonDefaults.filledTonalButtonColors(containerColor = Blue)
+            ) {
+                Icon(Icons.Filled.LocalHospital, contentDescription = null)
+                Spacer(Modifier.size(8.dp))
+                Text("Search nearby hospitals")
             }
             OutlinedButton(onClick = onNavigate, modifier = Modifier.fillMaxWidth().height(48.dp), shape = RoundedCornerShape(14.dp)) {
                 Icon(Icons.Filled.Navigation, contentDescription = null)

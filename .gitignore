@@ -21,5 +21,5 @@ dashboard/node_modules/
 .DS_Store
 Thumbs.db
 
-# Firebase
+# Firebase configuration (keep local, never commit)
 mobile_app/app/google-services.json
