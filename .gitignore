@@ -1,0 +1,25 @@
+# Build outputs
+mobile_app/app/build/
+mobile_app/.gradle/
+mobile_app/build/
+mobile_app/local.properties
+mobile_app/.idea/
+mobile_app/*.hprof
+
+# Dashboard build
+dashboard/dist/
+dashboard/node_modules/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Firebase
+mobile_app/app/google-services.json
