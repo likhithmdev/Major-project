@@ -36,9 +36,11 @@ import com.smartambulance.driver.ui.screens.AdminActions
 import com.smartambulance.driver.ui.screens.AdminScreen
 import com.smartambulance.driver.ui.screens.DriverDashboard
 import com.smartambulance.driver.ui.screens.DriverScreen
+import com.smartambulance.driver.ui.screens.HospitalDashboard
 import com.smartambulance.driver.ui.screens.HospitalScreen
 import com.smartambulance.driver.ui.screens.HospitalSearchScreen
 import com.smartambulance.driver.ui.screens.LoginScreen
+import com.smartambulance.driver.ui.screens.PoliceDashboard
 import com.smartambulance.driver.ui.screens.PoliceScreen
 import com.smartambulance.driver.ui.theme.SmartAmbulanceTheme
 
@@ -150,7 +152,7 @@ class MainActivity : ComponentActivity() {
                         onEndEmergency = { completeEmergency(current) },
                         onLogout = { logout() }
                     )
-                    "police" -> PoliceScreen(
+                    "police" -> PoliceDashboard(
                         user = current,
                         junctionId = current.assignedJunctionId ?: "JNC001",
                         alert = policeAlert,
@@ -158,7 +160,7 @@ class MainActivity : ComponentActivity() {
                         onRefresh = { bindPolice(current) },
                         onLogout = { logout() }
                     )
-                    "hospital" -> HospitalScreen(
+                    "hospital" -> HospitalDashboard(
                         user = current,
                         hospitalId = current.hospitalId ?: "HOSP001",
                         alert = hospitalAlert,
