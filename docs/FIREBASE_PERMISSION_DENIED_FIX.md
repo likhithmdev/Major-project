@@ -30,7 +30,18 @@ For testing and development, use these simpler rules that allow authenticated us
 3. Paste them into the rules editor
 4. Click **Publish**
 
-### Step 3: Seed Demo Data
+### Step 3: Enable Anonymous Authentication
+
+The app now uses Firebase Authentication sign-in before reading the database. You must enable Anonymous authentication:
+
+1. In the left sidebar, click **Build**
+2. Click **Authentication**
+3. Click **Get Started** (if not already enabled)
+4. Click the **Sign-in method** tab
+5. Enable **Anonymous** sign-in method
+6. Click **Save**
+
+### Step 4: Seed Demo Data
 After applying demo rules, make sure to seed the demo data:
 
 1. Open the Smart Ambulance app
@@ -42,14 +53,23 @@ After applying demo rules, make sure to seed the demo data:
 
 The "permission denied" error occurs because:
 
-1. **Database Rules Too Restrictive**: The production rules require:
+1. **No Firebase Authentication**: The app was not signing in to Firebase Authentication before reading the database. The rules require `auth != null`, but the app had no authenticated user.
+
+2. **Database Rules Too Restrictive**: The production rules require:
    - Users to have specific roles set correctly
    - Proper data structure in the database
    - Authentication to be fully configured
 
-2. **Demo Data Not Seeded**: The demo users might not exist in the database yet, so even with proper rules, the login fails
+3. **Demo Data Not Seeded**: The demo users might not exist in the database yet, so even with proper rules, the login fails
 
-3. **Data Structure Mismatch**: The rules expect specific data structure that might not match the current database state
+4. **Data Structure Mismatch**: The rules expect specific data structure that might not match the current database state
+
+## What Was Fixed
+
+The app has been updated to:
+- Sign in to Firebase Authentication anonymously on app startup
+- Ensure Firebase Auth is signed in before reading the database
+- This satisfies the `auth != null` requirement in the demo rules
 
 ## Testing After Demo Rules
 

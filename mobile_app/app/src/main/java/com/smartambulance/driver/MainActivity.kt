@@ -19,6 +19,7 @@ import androidx.core.view.WindowCompat
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import com.google.android.gms.tasks.CancellationTokenSource
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.ValueEventListener
@@ -43,6 +44,7 @@ import com.smartambulance.driver.ui.theme.SmartAmbulanceTheme
 class MainActivity : ComponentActivity() {
     private val repository = DemoRepository()
     private val locationHandler = Handler(Looper.getMainLooper())
+    private val auth = FirebaseAuth.getInstance()
     private lateinit var mqttManager: MqttManager
     private lateinit var hospitalDiscoveryService: HospitalDiscoveryService
     private lateinit var navigationService: NavigationService
@@ -82,7 +84,10 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         WindowCompat.getInsetsController(window, window.decorView).isAppearanceLightStatusBars = false
         requestLocationPermission()
-        
+
+        // Sign in to Firebase Authentication anonymously
+        signInAnonymously()
+
         // Initialize MQTT Manager
         mqttManager = MqttManager(this)
         mqttManager.setOnConnectionStatusChanged { connected ->
@@ -227,9 +232,40 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    private fun signInAnonymously() {
+        if (auth.currentUser == null) {
+            auth.signInAnonymously()
+                .addOnSuccessListener {
+                    // Successfully signed in
+                }
+                .addOnFailureListener { error ->
+                    // Sign in failed
+                }
+        }
+    }
+
     private fun login() {
         loading = true
-        message = "Checking Firebase user..."
+        message = "Authenticating with Firebase..."
+
+        // Ensure Firebase Auth is signed in before reading database
+        if (auth.currentUser == null) {
+            auth.signInAnonymously()
+                .addOnSuccessListener {
+                    message = "Checking Firebase user..."
+                    performLogin()
+                }
+                .addOnFailureListener { error ->
+                    loading = false
+                    message = "Firebase Auth failed: ${error.message}"
+                }
+        } else {
+            message = "Checking Firebase user..."
+            performLogin()
+        }
+    }
+
+    private fun performLogin() {
         repository.login(userId, pin) { found, error ->
             runOnUiThread {
                 loading = false
