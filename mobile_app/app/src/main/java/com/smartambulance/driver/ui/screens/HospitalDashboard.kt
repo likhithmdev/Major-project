@@ -135,7 +135,7 @@ fun HospitalDashboard(
         // Tab Row
         TabRow(
             selectedTabIndex = selectedTab,
-            containerColor = CardBackground,
+            containerColor = ElevatedCard,
             contentColor = Color.White,
             indicator = { tabPositions ->
                 Box(
@@ -153,7 +153,7 @@ fun HospitalDashboard(
                     text = {
                         Text(
                             text = title,
-                            color = if (selectedTab == index) HospitalGreen else Color.White,
+                            color = if (selectedTab == index) HospitalGreen else TextPrimary,
                             fontWeight = if (selectedTab == index) FontWeight.Bold else FontWeight.Normal
                         )
                     }

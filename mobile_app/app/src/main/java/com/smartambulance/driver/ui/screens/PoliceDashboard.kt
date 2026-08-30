@@ -132,7 +132,7 @@ fun PoliceDashboard(
         // Tab Row
         TabRow(
             selectedTabIndex = selectedTab,
-            containerColor = CardBackground,
+            containerColor = ElevatedCard,
             contentColor = Color.White,
             indicator = { tabPositions ->
                 Box(
@@ -150,7 +150,7 @@ fun PoliceDashboard(
                     text = {
                         Text(
                             text = title,
-                            color = if (selectedTab == index) PoliceBlue else Color.White,
+                            color = if (selectedTab == index) PoliceBlue else TextPrimary,
                             fontWeight = if (selectedTab == index) FontWeight.Bold else FontWeight.Normal
                         )
                     }

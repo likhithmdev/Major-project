@@ -155,7 +155,7 @@ fun DriverDashboard(
         // Tab Row
         TabRow(
             selectedTabIndex = selectedTab,
-            containerColor = CardBackground,
+            containerColor = ElevatedCard,
             contentColor = Color.White,
             indicator = { tabPositions ->
                 Box(
@@ -173,7 +173,7 @@ fun DriverDashboard(
                     text = {
                         Text(
                             text = title,
-                            color = if (selectedTab == index) PrimaryRed else Color.White,
+                            color = if (selectedTab == index) PrimaryRed else TextPrimary,
                             fontWeight = if (selectedTab == index) FontWeight.Bold else FontWeight.Normal
                         )
                     }
