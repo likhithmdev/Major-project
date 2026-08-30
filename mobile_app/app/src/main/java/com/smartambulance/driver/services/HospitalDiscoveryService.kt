@@ -48,33 +48,38 @@ class HospitalDiscoveryService(private val context: Context) {
     /**
      * Find nearby hospitals using OpenStreetMap Overpass API
      */
-    suspend fun findNearbyHospitals(location: LatLng): Result<List<Hospital>> = 
+    suspend fun findNearbyHospitals(location: LatLng): Result<List<Hospital>> =
         withContext(Dispatchers.IO) {
             try {
                 // Build Overpass query to find hospitals within radius
                 val bbox = buildBoundingBox(location, HOSPITAL_SEARCH_RADIUS.toDouble())
                 val query = buildOverpassQuery(bbox)
-                
+
+                // Use GET request with proper headers to avoid 406 error
+                val encodedQuery = java.net.URLEncoder.encode(query, "UTF-8")
+                val url = "$OVERPASS_API_URL?data=$encodedQuery"
+
                 val request = Request.Builder()
-                    .url(OVERPASS_API_URL)
-                    .post(createOverpassRequestBody(query))
-                    .addHeader("Content-Type", "application/x-www-form-urlencoded")
+                    .url(url)
+                    .addHeader("Accept", "application/json")
+                    .addHeader("User-Agent", "SmartAmbulance/1.0")
                     .build()
-                
+
                 val response = httpClient.newCall(request).execute()
-                
+
                 if (!response.isSuccessful) {
+                    Log.e(TAG, "API request failed with code: ${response.code}")
                     return@withContext Result.failure(Exception("API request failed: ${response.code}"))
                 }
-                
+
                 val responseBody = response.body?.string()
                 if (responseBody.isNullOrEmpty()) {
                     return@withContext Result.failure(Exception("Empty response"))
                 }
-                
+
                 val hospitals = parseOverpassResponse(responseBody, location)
                 Result.success(hospitals)
-                
+
             } catch (e: Exception) {
                 Log.e(TAG, "Error finding nearby hospitals", e)
                 Result.failure(e)
@@ -295,11 +300,6 @@ class HospitalDiscoveryService(private val context: Context) {
             );
             out center;
         """.trimIndent()
-    }
-    
-    private fun createOverpassRequestBody(query: String): okhttp3.RequestBody {
-        val body = "data=$query"
-        return body.toRequestBody("application/x-www-form-urlencoded".toMediaType())
     }
     
     private fun parseOverpassResponse(responseBody: String, currentLocation: LatLng): List<Hospital> {

@@ -153,6 +153,7 @@ fun HospitalDashboard(
                     text = {
                         Text(
                             text = title,
+                            color = if (selectedTab == index) HospitalGreen else TextPrimary,
                             fontWeight = if (selectedTab == index) FontWeight.Bold else FontWeight.Normal
                         )
                     }

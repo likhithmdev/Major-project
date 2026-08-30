@@ -150,6 +150,7 @@ fun PoliceDashboard(
                     text = {
                         Text(
                             text = title,
+                            color = if (selectedTab == index) PoliceBlue else TextPrimary,
                             fontWeight = if (selectedTab == index) FontWeight.Bold else FontWeight.Normal
                         )
                     }

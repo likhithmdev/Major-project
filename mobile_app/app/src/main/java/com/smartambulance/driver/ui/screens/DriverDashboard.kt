@@ -173,6 +173,7 @@ fun DriverDashboard(
                     text = {
                         Text(
                             text = title,
+                            color = if (selectedTab == index) PrimaryRed else TextPrimary,
                             fontWeight = if (selectedTab == index) FontWeight.Bold else FontWeight.Normal
                         )
                     }
