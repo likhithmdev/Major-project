@@ -6,9 +6,9 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Ambulance
+import androidx.compose.material.icons.filled.DirectionsCar
 import androidx.compose.material.icons.filled.LocalHospital
-import androidx.compose.material.icons.filled.Police
+import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -34,8 +34,8 @@ fun QuickLoginCard(
     modifier: Modifier = Modifier
 ) {
     val (roleColor, icon) = when (role) {
-        "Driver" -> DriverRed to Icons.Default.Ambulance
-        "Police" -> PoliceBlue to Icons.Default.Police
+        "Driver" -> DriverRed to Icons.Default.DirectionsCar
+        "Police" -> PoliceBlue to Icons.Default.Security
         "Hospital" -> HospitalGreen to Icons.Default.LocalHospital
         "Admin" -> AdminAmber to Icons.Default.Shield
         else -> TextMuted to Icons.Default.Shield

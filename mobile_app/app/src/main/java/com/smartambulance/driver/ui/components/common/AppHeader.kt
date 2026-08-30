@@ -1,6 +1,8 @@
 package com.smartambulance.driver.ui.components.common
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -8,7 +10,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ExitToApp
+import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -63,7 +65,7 @@ fun AppHeader(
         if (showExitButton) {
             IconButton(onClick = onExit) {
                 Icon(
-                    imageVector = Icons.Default.ExitToApp,
+                    imageVector = Icons.AutoMirrored.Filled.ExitToApp,
                     contentDescription = "Exit",
                     tint = TextPrimary
                 )
