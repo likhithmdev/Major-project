@@ -33,6 +33,7 @@ import com.smartambulance.driver.mqtt.MqttTopics
 import com.smartambulance.driver.services.HospitalDiscoveryService
 import com.smartambulance.driver.services.NavigationService
 import com.smartambulance.driver.ui.screens.AdminActions
+import com.smartambulance.driver.ui.screens.AdminDashboard
 import com.smartambulance.driver.ui.screens.AdminScreen
 import com.smartambulance.driver.ui.screens.DriverDashboard
 import com.smartambulance.driver.ui.screens.DriverScreen
@@ -177,7 +178,7 @@ class MainActivity : ComponentActivity() {
                         },
                         onLogout = { logout() }
                     )
-                    "admin" -> AdminScreen(
+                    "admin" -> AdminDashboard(
                         user = current,
                         message = adminMessage,
                         records = adminRecords,
