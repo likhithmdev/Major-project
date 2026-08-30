@@ -41,6 +41,21 @@ The app now uses Firebase Authentication sign-in before reading the database. Yo
 5. Enable **Anonymous** sign-in method
 6. Click **Save**
 
+**Alternative: If Firebase Auth Fails**
+
+If you get "Firebase Auth failed: internal error", use these rules that allow unauthenticated access:
+
+```json
+{
+  "rules": {
+    ".read": true,
+    ".write": true
+  }
+}
+```
+
+This will allow the app to work without Firebase Authentication (less secure, but useful for testing).
+
 ### Step 4: Seed Demo Data
 After applying demo rules, make sure to seed the demo data:
 
@@ -135,6 +150,43 @@ If you still get permission denied after applying demo rules:
 3. **Check Network**: Ensure you have internet connectivity
 4. **Check Firebase Console**: Look for any error messages in the console
 5. **Check User Data**: Verify demo users exist in Authentication tab
+
+## Firebase Auth "Internal Error" Troubleshooting
+
+If you see "Firebase Auth failed: internal error":
+
+**Cause 1: Anonymous Auth Not Enabled**
+- Go to Firebase Console → Authentication → Sign-in method
+- Enable Anonymous sign-in method
+
+**Cause 2: google-services.json Incorrect**
+- Verify the file is in `mobile_app/app/google-services.json`
+- Check that the project ID matches: `smart-ambulance-36f9d`
+- Regenerate the file from Firebase Console if needed
+
+**Cause 3: Network Issues**
+- Firebase Auth requires internet connectivity
+- Check if your device/emulator has internet access
+- Try on a different network
+
+**Cause 4: Firebase Project Configuration**
+- Verify the project is not in a suspended/banned state
+- Check Firebase Console for any project-level errors
+
+**Quick Fix: Use Unauthenticated Rules**
+
+If Firebase Auth continues to fail, use these rules:
+
+```json
+{
+  "rules": {
+    ".read": true,
+    ".write": true
+  }
+}
+```
+
+This bypasses the authentication requirement and allows the app to work. Less secure, but useful for testing.
 
 ## Monitoring
 

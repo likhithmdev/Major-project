@@ -239,7 +239,8 @@ class MainActivity : ComponentActivity() {
                     // Successfully signed in
                 }
                 .addOnFailureListener { error ->
-                    // Sign in failed
+                    // Sign in failed - log the error for debugging
+                    android.util.Log.e("FirebaseAuth", "Anonymous sign-in failed: ${error.message}", error)
                 }
         }
     }
@@ -256,8 +257,10 @@ class MainActivity : ComponentActivity() {
                     performLogin()
                 }
                 .addOnFailureListener { error ->
-                    loading = false
-                    message = "Firebase Auth failed: ${error.message}"
+                    android.util.Log.e("FirebaseAuth", "Auth failed during login: ${error.message}", error)
+                    // Fallback: Try to login anyway - user may have rules that allow unauthenticated access
+                    message = "Auth warning: ${error.message}. Checking user data..."
+                    performLogin()
                 }
         } else {
             message = "Checking Firebase user..."
