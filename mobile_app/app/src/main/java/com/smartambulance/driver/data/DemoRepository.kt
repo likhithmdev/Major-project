@@ -48,6 +48,249 @@ class DemoRepository {
         HospitalOption("HOSP003", "St. Mark Trauma Unit", "4.6 km", "12 min", 11)
     )
 
+    val bangaloreHospitals = listOf(
+        mapOf(
+            "hospitalId" to "HOSP004",
+            "name" to "Sathya Sai Orthopaedic & Multispeciality Hospital",
+            "address" to "Old Madras Rd, next to RTO, Banashankari Layout, Bhattarahalli, Bangalore - 560049",
+            "contact" to "+91 7022649111 / 080-88930745",
+            "pincode" to "560049",
+            "bedsAvailable" to 50,
+            "emergencyAvailable" to true,
+            "latitude" to 13.0285,
+            "longitude" to 77.6585
+        ),
+        mapOf(
+            "hospitalId" to "HOSP005",
+            "name" to "Ovum Woman & Child Speciality Hospital",
+            "address" to "2nd Floor, Venkatadri Complex, 29p/32, Old Madras Rd, Bhattarahalli Gate, Bangalore - 560049",
+            "contact" to "080-45309999",
+            "pincode" to "560049",
+            "bedsAvailable" to 30,
+            "emergencyAvailable" to true,
+            "latitude" to 13.0290,
+            "longitude" to 77.6590
+        ),
+        mapOf(
+            "hospitalId" to "HOSP006",
+            "name" to "Hope Hospital",
+            "address" to "Sy No. 32/2, Site No. 1–4, Old Madras Rd, Sannatammanahalli, Bhattarahalli, Bangalore - 560049",
+            "contact" to "+91 7483257544",
+            "pincode" to "560049",
+            "bedsAvailable" to 25,
+            "emergencyAvailable" to true,
+            "latitude" to 13.0295,
+            "longitude" to 77.6595
+        ),
+        mapOf(
+            "hospitalId" to "HOSP007",
+            "name" to "Geetha Hospital",
+            "address" to "Old Madras Rd, Muneshwara Layout, Virgonagar, Avalahalli, Bangalore - 560049",
+            "contact" to "+91 6364300440 / +91 9108474852 / 080-29899440",
+            "pincode" to "560049",
+            "bedsAvailable" to 20,
+            "emergencyAvailable" to true,
+            "latitude" to 13.0300,
+            "longitude" to 77.6600
+        ),
+        mapOf(
+            "hospitalId" to "HOSP008",
+            "name" to "VR Revankar Hospital & Cardiac Care Center",
+            "address" to "Near Ravindu Toyota, Old Madras Road, Virgonagar, Bangalore - 560049",
+            "contact" to "+91 8123189099 / +91 8123819099",
+            "pincode" to "560049",
+            "bedsAvailable" to 40,
+            "emergencyAvailable" to true,
+            "latitude" to 13.0305,
+            "longitude" to 77.6605
+        ),
+        mapOf(
+            "hospitalId" to "HOSP009",
+            "name" to "Currex Hospital",
+            "address" to "No. 55 & 56, Seegehalli Main Rd, Bhoo Samartha Layout, Seegehalli, Bangalore - 560049",
+            "contact" to "+91 8296512929 / 080-29904293",
+            "pincode" to "560049",
+            "bedsAvailable" to 15,
+            "emergencyAvailable" to true,
+            "latitude" to 13.0310,
+            "longitude" to 77.6610
+        ),
+        mapOf(
+            "hospitalId" to "HOSP010",
+            "name" to "East Point Super-Specialty Hospital",
+            "address" to "East Point Campus, Virgo Nagar Post, Jnana Prabha, Avalahalli, Bangalore - 560049",
+            "contact" to "+91 7866911911",
+            "pincode" to "560049",
+            "bedsAvailable" to 100,
+            "emergencyAvailable" to true,
+            "latitude" to 13.0315,
+            "longitude" to 77.6615
+        ),
+        mapOf(
+            "hospitalId" to "HOSP011",
+            "name" to "S.N. Hospital",
+            "address" to "28/1, Old Madras Rd, Muneshwara Layout, Virgonagar, Bangalore - 560049",
+            "contact" to "Visit OPD directly",
+            "pincode" to "560049",
+            "bedsAvailable" to 18,
+            "emergencyAvailable" to true,
+            "latitude" to 13.0320,
+            "longitude" to 77.6620
+        ),
+        mapOf(
+            "hospitalId" to "HOSP012",
+            "name" to "Primary Health Center (PHC) Seegehalli",
+            "address" to "Seegehalli Main Road, Krishnarajapura, Bangalore - 560049",
+            "contact" to "Govt facility - Visit OPD directly",
+            "pincode" to "560049",
+            "bedsAvailable" to 10,
+            "emergencyAvailable" to true,
+            "latitude" to 13.0325,
+            "longitude" to 77.6625
+        ),
+        mapOf(
+            "hospitalId" to "HOSP013",
+            "name" to "Shanthinilaya Hospital",
+            "address" to "Thambuchetty Palya Main Road, Battarahalli, Bangalore - 560049",
+            "contact" to "Visit clinic directly",
+            "pincode" to "560049",
+            "bedsAvailable" to 12,
+            "emergencyAvailable" to true,
+            "latitude" to 13.0330,
+            "longitude" to 77.6630
+        ),
+        mapOf(
+            "hospitalId" to "HOSP014",
+            "name" to "Goodlife Hospital",
+            "address" to "Kurudusonnenahalli Main Road, Seegehalli-Avalahalli area, Bangalore - 560049",
+            "contact" to "Not publicly listed",
+            "pincode" to "560049",
+            "bedsAvailable" to 8,
+            "emergencyAvailable" to true,
+            "latitude" to 13.0335,
+            "longitude" to 77.6635
+        ),
+        mapOf(
+            "hospitalId" to "HOSP015",
+            "name" to "Elan Poly Clinic & Hospital",
+            "address" to "Seegehalli Main Road, Krishnarajapuram, Bangalore - 560049",
+            "contact" to "Not publicly listed",
+            "pincode" to "560049",
+            "bedsAvailable" to 10,
+            "emergencyAvailable" to true,
+            "latitude" to 13.0340,
+            "longitude" to 77.6640
+        ),
+        mapOf(
+            "hospitalId" to "HOSP016",
+            "name" to "Altor Hospitals",
+            "address" to "Service Road, Near TC Palya Signal, Cambridge College Rd, KR Puram, Bangalore - 560036",
+            "contact" to "080-68249699 / +91 8884481081",
+            "pincode" to "560036",
+            "bedsAvailable" to 35,
+            "emergencyAvailable" to true,
+            "latitude" to 13.0120,
+            "longitude" to 77.6800
+        ),
+        mapOf(
+            "hospitalId" to "HOSP017",
+            "name" to "Aster Whitefield Hospital",
+            "address" to "Plot No. 3 & 4, Main Road, Sadaramangala Industrial Area, Whitefield, Bangalore - 560066",
+            "contact" to "080-45104510",
+            "pincode" to "560066",
+            "bedsAvailable" to 150,
+            "emergencyAvailable" to true,
+            "latitude" to 12.9690,
+            "longitude" to 77.7510
+        ),
+        mapOf(
+            "hospitalId" to "HOSP018",
+            "name" to "Manipal Hospital Whitefield",
+            "address" to "ITPL Main Rd, KIADB Export Promotion Industrial Area, Whitefield, Bangalore - 560066",
+            "contact" to "080-40474047 / 1800-102-5555",
+            "pincode" to "560066",
+            "bedsAvailable" to 200,
+            "emergencyAvailable" to true,
+            "latitude" to 12.9700,
+            "longitude" to 77.7520
+        ),
+        mapOf(
+            "hospitalId" to "HOSP019",
+            "name" to "Surgecare Super Speciality Hospital",
+            "address" to "Site No 1&2, 5th Cross, Ramamurthi Nagar Main Rd, Dayananda Layout, Bangalore - 560016",
+            "contact" to "+91 9606026006 / +91 9606036006",
+            "pincode" to "560016",
+            "bedsAvailable" to 45,
+            "emergencyAvailable" to true,
+            "latitude" to 13.0160,
+            "longitude" to 77.6500
+        ),
+        mapOf(
+            "hospitalId" to "HOSP020",
+            "name" to "Koshys Multispeciality Hospital",
+            "address" to "127, 7th Main Rd, Raghavendra Nagar, T.C. Palya Road Extension, Ramamurthy Nagar, Bangalore - 560016",
+            "contact" to "080-46634663 / +91 7618737390",
+            "pincode" to "560016",
+            "bedsAvailable" to 60,
+            "emergencyAvailable" to true,
+            "latitude" to 13.0170,
+            "longitude" to 77.6510
+        ),
+        mapOf(
+            "hospitalId" to "HOSP021",
+            "name" to "Sunrise Hospital",
+            "address" to "9, Jayanti Nagar Main Rd, near Raghavendra Circle, Ramamurthy Nagar, Bangalore - 560016",
+            "contact" to "+91 9035028441",
+            "pincode" to "560016",
+            "bedsAvailable" to 25,
+            "emergencyAvailable" to true,
+            "latitude" to 13.0180,
+            "longitude" to 77.6520
+        ),
+        mapOf(
+            "hospitalId" to "HOSP022",
+            "name" to "Sri Lakshmi Super Speciality Hospital",
+            "address" to "3rd Main Road, Old Extension, Krishnarajapuram, Bangalore - 560036",
+            "contact" to "080-25618111 / 080-25613333",
+            "pincode" to "560036",
+            "bedsAvailable" to 40,
+            "emergencyAvailable" to true,
+            "latitude" to 13.0130,
+            "longitude" to 77.6810
+        ),
+        mapOf(
+            "hospitalId" to "HOSP023",
+            "name" to "Deepa Hospital",
+            "address" to "Devasandra Main Road, near KR Puram, Bangalore - 560036",
+            "contact" to "080-25615550",
+            "pincode" to "560036",
+            "bedsAvailable" to 20,
+            "emergencyAvailable" to true,
+            "latitude" to 13.0140,
+            "longitude" to 77.6820
+        )
+    )
+
+    fun seedBangaloreHospitals(onResult: ((Boolean, String) -> Unit)? = null) {
+        // Add hospitals one by one to avoid type mismatch
+        var addedCount = 0
+        val totalHospitals = bangaloreHospitals.size
+
+        bangaloreHospitals.forEach { hospital ->
+            val hospitalId = hospital["hospitalId"] as String
+            database.child(FirebasePaths.HOSPITALS).child(hospitalId).setValue(hospital)
+                .addOnSuccessListener {
+                    addedCount++
+                    if (addedCount == totalHospitals) {
+                        onResult?.invoke(true, "Added $totalHospitals Bangalore hospitals successfully")
+                    }
+                }
+                .addOnFailureListener { e ->
+                    onResult?.invoke(false, "Failed to add hospital $hospitalId: ${e.message}")
+                }
+        }
+    }
+
     fun seedDemoData(onResult: ((Boolean, String) -> Unit)? = null) {
         val seedTasks = listOf(
             database.child(FirebasePaths.USERS).updateChildren(

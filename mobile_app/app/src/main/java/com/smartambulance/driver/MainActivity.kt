@@ -205,6 +205,14 @@ class MainActivity : ComponentActivity() {
                                     message = if (ok) result else "Firebase write failed: $result"
                                 }
                             }
+                        },
+                        onSeedHospitals = {
+                            message = "Adding Bangalore hospitals to Firebase..."
+                            repository.seedBangaloreHospitals { ok, result ->
+                                runOnUiThread {
+                                    message = if (ok) result else "Failed: $result"
+                                }
+                            }
                         }
                     )
                 }

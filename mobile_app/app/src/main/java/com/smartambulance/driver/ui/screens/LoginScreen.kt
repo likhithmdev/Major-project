@@ -52,7 +52,8 @@ fun LoginScreen(
     onPin: (String) -> Unit,
     onFill: (String, String) -> Unit,
     onLogin: () -> Unit,
-    onSeed: () -> Unit
+    onSeed: () -> Unit,
+    onSeedHospitals: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -224,6 +225,20 @@ fun LoginScreen(
                 Text(
                     text = "Load demo accounts",
                     color = TextMuted,
+                    fontSize = 12.sp
+                )
+            }
+
+            Spacer(modifier = Modifier.height(4.dp))
+
+            // Load Bangalore hospitals button
+            TextButton(
+                onClick = onSeedHospitals,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    text = "Load Bangalore hospitals",
+                    color = HospitalGreen,
                     fontSize = 12.sp
                 )
             }
