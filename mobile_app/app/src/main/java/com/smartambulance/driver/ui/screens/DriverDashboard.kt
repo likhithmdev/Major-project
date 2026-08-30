@@ -156,7 +156,7 @@ fun DriverDashboard(
         TabRow(
             selectedTabIndex = selectedTab,
             containerColor = CardBackground,
-            contentColor = TextPrimary,
+            contentColor = Color.White,
             indicator = { tabPositions ->
                 Box(
                     Modifier
@@ -173,7 +173,7 @@ fun DriverDashboard(
                     text = {
                         Text(
                             text = title,
-                            color = if (selectedTab == index) PrimaryRed else TextPrimary,
+                            color = if (selectedTab == index) PrimaryRed else Color.White,
                             fontWeight = if (selectedTab == index) FontWeight.Bold else FontWeight.Normal
                         )
                     }
@@ -196,7 +196,7 @@ fun DriverDashboard(
                 onStartEmergency = onStartEmergency,
                 onEndEmergency = onEndEmergency
             )
-            1 -> NavigateTab(onGetLocation = onSearchHospital)
+            1 -> NavigateTab(selectedHospital = selectedHospital, onGetLocation = onSearchHospital)
             2 -> StatusTab(user = user, selectedHospital = selectedHospital)
         }
     }
@@ -330,6 +330,7 @@ fun MissionTab(
 
 @Composable
 fun NavigateTab(
+    selectedHospital: HospitalOption,
     onGetLocation: () -> Unit = {}
 ) {
     Column(
@@ -337,7 +338,7 @@ fun NavigateTab(
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
     ) {
-        // Map placeholder (will be replaced with actual map)
+        // Map placeholder with destination info
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -359,9 +360,16 @@ fun NavigateTab(
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = "Tap to get location",
-                    color = TextDim,
-                    fontSize = 12.sp
+                    text = "Destination: ${selectedHospital.name}",
+                    color = TextPrimary,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.SemiBold
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "Distance: ${selectedHospital.distance}",
+                    color = TextMuted,
+                    fontSize = 10.sp
                 )
             }
         }
@@ -396,13 +404,13 @@ fun NavigateTab(
         ) {
             StatCard(
                 label = "ETA",
-                value = "8 min",
+                value = selectedHospital.eta,
                 valueColor = SecondaryAmber,
                 modifier = Modifier.weight(1f)
             )
             StatCard(
                 label = "Distance",
-                value = "2.4 km",
+                value = selectedHospital.distance,
                 valueColor = PoliceBlue,
                 modifier = Modifier.weight(1f)
             )
