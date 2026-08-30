@@ -34,6 +34,7 @@ import com.smartambulance.driver.services.HospitalDiscoveryService
 import com.smartambulance.driver.services.NavigationService
 import com.smartambulance.driver.ui.screens.AdminActions
 import com.smartambulance.driver.ui.screens.AdminScreen
+import com.smartambulance.driver.ui.screens.DriverDashboard
 import com.smartambulance.driver.ui.screens.DriverScreen
 import com.smartambulance.driver.ui.screens.HospitalScreen
 import com.smartambulance.driver.ui.screens.HospitalSearchScreen
@@ -133,23 +134,20 @@ class MainActivity : ComponentActivity() {
             SmartAmbulanceTheme {
                 val current = user
                 when (current?.role) {
-                    "ambulance_driver" -> DriverScreen(
+                    "ambulance_driver" -> DriverDashboard(
                         user = current,
                         hospitals = repository.hospitals,
-                        selectedHospital = selectedHospital,
-                        severity = selectedSeverity,
                         emergencyActive = emergencyActive,
+                        selectedSeverity = selectedSeverity,
+                        selectedHospital = selectedHospital,
                         status = status,
-                        gps = gps,
-                        onSeverity = { selectedSeverity = it },
-                        onHospital = {
+                        onSeverityChange = { selectedSeverity = it },
+                        onHospitalChange = {
                             selectedHospital = it
                             status = "Destination locked · ${it.name}"
                         },
-                        onStart = { startEmergency(current) },
-                        onComplete = { completeEmergency(current) },
-                        onNavigate = { openDirections(selectedHospital) },
-                        onSearchHospital = { showHospitalSearch = true },
+                        onStartEmergency = { startEmergency(current) },
+                        onEndEmergency = { completeEmergency(current) },
                         onLogout = { logout() }
                     )
                     "police" -> PoliceScreen(
@@ -302,7 +300,7 @@ class MainActivity : ComponentActivity() {
         repository.startEmergencyTrip(current, selectedSeverity, selectedHospital)
         status = "Emergency live · $selectedSeverity · ${selectedHospital.name}"
         gps = "GPS-LoRa: phone GPS publishing. Vehicle LoRa handles junction preemption."
-        
+
         // Publish emergency status via MQTT
         if (mqttManager.isConnected()) {
             val ambulanceId = current.ambulanceId ?: "AMB001"
@@ -311,10 +309,10 @@ class MainActivity : ComponentActivity() {
                 """{"ambulanceId":"$ambulanceId","status":"emergency_active","severity":"$selectedSeverity","destinationHospitalId":"${selectedHospital.id}","timestamp":${System.currentTimeMillis()}}"""
             )
         }
-        
+
         locationHandler.removeCallbacks(locationPublisher)
         locationHandler.post(locationPublisher)
-        openDirections(selectedHospital)
+        // openDirections(selectedHospital) // Temporarily disabled for UI upgrade
     }
 
     private fun completeEmergency(current: AppUser) {
