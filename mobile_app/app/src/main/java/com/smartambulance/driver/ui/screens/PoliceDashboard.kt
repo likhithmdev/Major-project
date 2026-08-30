@@ -132,7 +132,7 @@ fun PoliceDashboard(
         // Tab Row
         TabRow(
             selectedTabIndex = selectedTab,
-            containerColor = ElevatedCard,
+            containerColor = Color.Transparent,
             contentColor = TextPrimary,
             indicator = { tabPositions ->
                 Box(
