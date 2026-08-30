@@ -18,6 +18,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.DirectionsCar
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -40,6 +41,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.smartambulance.driver.data.AppUser
+import com.smartambulance.driver.data.Hospital
 import com.smartambulance.driver.data.HospitalOption
 import com.smartambulance.driver.ui.components.common.AppHeader
 import com.smartambulance.driver.ui.components.common.HospitalCard
@@ -63,6 +65,7 @@ fun DriverDashboard(
     onHospitalChange: (HospitalOption) -> Unit,
     onStartEmergency: () -> Unit,
     onEndEmergency: () -> Unit,
+    onSearchHospital: () -> Unit,
     onLogout: () -> Unit
 ) {
     var selectedTab by remember { mutableIntStateOf(0) }
@@ -130,6 +133,13 @@ fun DriverDashboard(
                         textColor = PrimaryRed
                     )
                 }
+                IconButton(onClick = onSearchHospital) {
+                    Icon(
+                        imageVector = Icons.Default.Search,
+                        contentDescription = "Search Hospitals",
+                        tint = TextPrimary
+                    )
+                }
                 IconButton(onClick = onLogout) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ExitToApp,
@@ -185,7 +195,7 @@ fun DriverDashboard(
                 onStartEmergency = onStartEmergency,
                 onEndEmergency = onEndEmergency
             )
-            1 -> NavigateTab()
+            1 -> NavigateTab(onGetLocation = onSearchHospital)
             2 -> StatusTab(user = user, selectedHospital = selectedHospital)
         }
     }
@@ -318,7 +328,9 @@ fun MissionTab(
 }
 
 @Composable
-fun NavigateTab() {
+fun NavigateTab(
+    onGetLocation: () -> Unit = {}
+) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -335,10 +347,42 @@ fun NavigateTab() {
                 ),
             contentAlignment = Alignment.Center
         ) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    text = "Map View",
+                    color = TextMuted,
+                    fontSize = 14.sp
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "Tap to get location",
+                    color = TextDim,
+                    fontSize = 12.sp
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Location-based hospital discovery button
+        Button(
+            onClick = onGetLocation,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(48.dp),
+            shape = RoundedCornerShape(12.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = HospitalGreen,
+                contentColor = Color.White
+            )
+        ) {
             Text(
-                text = "Map View",
-                color = TextMuted,
-                fontSize = 14.sp
+                text = "📍 Get Location & Find Nearby Hospitals",
+                fontSize = 14.sp,
+                fontWeight = FontWeight.SemiBold
             )
         }
 

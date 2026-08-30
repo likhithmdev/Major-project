@@ -151,6 +151,7 @@ class MainActivity : ComponentActivity() {
                         },
                         onStartEmergency = { startEmergency(current) },
                         onEndEmergency = { completeEmergency(current) },
+                        onSearchHospital = { showHospitalSearch = true },
                         onLogout = { logout() }
                     )
                     "police" -> PoliceDashboard(
