@@ -156,7 +156,7 @@ fun DriverDashboard(
         TabRow(
             selectedTabIndex = selectedTab,
             containerColor = ElevatedCard,
-            contentColor = Color.White,
+            contentColor = TextPrimary,
             indicator = { tabPositions ->
                 Box(
                     Modifier
@@ -170,10 +170,11 @@ fun DriverDashboard(
                 Tab(
                     selected = selectedTab == index,
                     onClick = { selectedTab = index },
+                    selectedContentColor = PrimaryRed,
+                    unselectedContentColor = TextPrimary,
                     text = {
                         Text(
                             text = title,
-                            color = if (selectedTab == index) PrimaryRed else TextPrimary,
                             fontWeight = if (selectedTab == index) FontWeight.Bold else FontWeight.Normal
                         )
                     }

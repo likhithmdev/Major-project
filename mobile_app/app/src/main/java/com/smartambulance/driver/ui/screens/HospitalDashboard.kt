@@ -136,7 +136,7 @@ fun HospitalDashboard(
         TabRow(
             selectedTabIndex = selectedTab,
             containerColor = ElevatedCard,
-            contentColor = Color.White,
+            contentColor = TextPrimary,
             indicator = { tabPositions ->
                 Box(
                     Modifier
@@ -150,10 +150,11 @@ fun HospitalDashboard(
                 Tab(
                     selected = selectedTab == index,
                     onClick = { selectedTab = index },
+                    selectedContentColor = HospitalGreen,
+                    unselectedContentColor = TextPrimary,
                     text = {
                         Text(
                             text = title,
-                            color = if (selectedTab == index) HospitalGreen else TextPrimary,
                             fontWeight = if (selectedTab == index) FontWeight.Bold else FontWeight.Normal
                         )
                     }
