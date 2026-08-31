@@ -5,6 +5,10 @@ import android.util.Log
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.model.LatLng
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
 import com.google.gson.Gson
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
@@ -17,6 +21,7 @@ import com.smartambulance.driver.data.Review
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.tasks.await
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -36,6 +41,7 @@ class HospitalDiscoveryService(private val context: Context) {
         LocationServices.getFusedLocationProviderClient(context)
     private val httpClient = OkHttpClient()
     private val gson = Gson()
+    private val database = FirebaseDatabase.getInstance().reference
     
     companion object {
         private const val TAG = "HospitalDiscovery"
@@ -77,11 +83,68 @@ class HospitalDiscoveryService(private val context: Context) {
                     return@withContext Result.failure(Exception("Empty response"))
                 }
 
-                val hospitals = parseOverpassResponse(responseBody, location)
-                Result.success(hospitals)
+                val osmHospitals = parseOverpassResponse(responseBody, location)
+                
+                // Also get Firebase hospitals and merge
+                val firebaseHospitals = getFirebaseHospitals(location).getOrNull() ?: emptyList()
+                
+                // Merge and deduplicate
+                val allHospitals = (osmHospitals + firebaseHospitals)
+                    .distinctBy { it.name }
+                    .sortedBy { it.distance }
+                
+                Result.success(allHospitals)
 
             } catch (e: Exception) {
                 Log.e(TAG, "Error finding nearby hospitals", e)
+                Result.failure(e)
+            }
+        }
+    
+    /**
+     * Get hospitals from Firebase database
+     */
+    suspend fun getFirebaseHospitals(location: LatLng): Result<List<Hospital>> =
+        withContext(Dispatchers.IO) {
+            try {
+                val snapshot = database.child("hospitals").get().await()
+                val hospitals = mutableListOf<Hospital>()
+                
+                snapshot.children.forEach { hospitalSnapshot ->
+                    val hospitalMap = hospitalSnapshot.value as? Map<*, *>
+                    if (hospitalMap != null) {
+                        val lat = (hospitalMap["latitude"] as? Double) ?: 0.0
+                        val lon = (hospitalMap["longitude"] as? Double) ?: 0.0
+                        
+                        if (lat != 0.0 && lon != 0.0) {
+                            val hospitalLocation = LatLng(lat, lon)
+                            val distance = calculateDistance(location, hospitalLocation)
+                            
+                            // Only include if within search radius
+                            if (distance <= HOSPITAL_SEARCH_RADIUS) {
+                                hospitals.add(
+                                    Hospital(
+                                        placeId = hospitalMap["hospitalId"] as? String ?: "",
+                                        name = hospitalMap["name"] as? String ?: "Unknown Hospital",
+                                        address = hospitalMap["address"] as? String ?: "",
+                                        location = hospitalLocation,
+                                        phone = hospitalMap["contact"] as? String ?: "",
+                                        rating = 0f,
+                                        distance = distance,
+                                        duration = "",
+                                        isOpen = true,
+                                        types = listOf("hospital"),
+                                        emergencyServices = hospitalMap["emergencyAvailable"] as? Boolean ?: true
+                                    )
+                                )
+                            }
+                        }
+                    }
+                }
+                
+                Result.success(hospitals.sortedBy { it.distance })
+            } catch (e: Exception) {
+                Log.e(TAG, "Error getting Firebase hospitals", e)
                 Result.failure(e)
             }
         }

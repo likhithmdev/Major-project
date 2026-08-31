@@ -4,6 +4,26 @@
   Broadcasts the same JSON the junction firmware already parses.
   Works with a Neo-6M GPS module, or with Serial simulation if GPS is not wired yet.
 
+  Hardware Pin Configuration:
+  - LoRa SX1278 (433MHz):
+    * VCC: 3.3V
+    * GND: GND
+    * MISO: GPIO 19
+    * MOSI: GPIO 23
+    * SCK: GPIO 18
+    * NSS (CS): GPIO 5
+    * RST: GPIO 14
+    * DIO0: GPIO 2
+  - GPS Module (Neo-6M/M8N):
+    * VCC: VIN/5V
+    * GND: GND
+    * TX: GPIO 16 (RX2)
+    * RX: GPIO 17 (TX2)
+  - Status LED: GPIO 25 (with 220Ω resistor)
+  - Active Buzzer: GPIO 26
+  - Emergency Button: GPIO 33 (with internal pullup)
+  - Power: TP4056 charger with LiPo battery
+
   Libraries to install in Arduino IDE:
   - LoRa by Sandeep Mistry
   - TinyGPSPlus by Mikal Hart
@@ -32,10 +52,12 @@ String TRIP_ID = "TRIP001";
 
 const int LORA_SS_PIN = 5;
 const int LORA_RST_PIN = 14;
-const int LORA_DIO0_PIN = 26;
-const int EMERGENCY_BUTTON_PIN = 4;
+const int LORA_DIO0_PIN = 2;
+const int EMERGENCY_BUTTON_PIN = 33;
 const int GPS_RX_PIN = 16;
 const int GPS_TX_PIN = 17;
+const int STATUS_LED_PIN = 25;
+const int BUZZER_PIN = 26;
 
 const unsigned long BROADCAST_INTERVAL_MS = 1000;
 const bool START_IN_EMERGENCY = true;
@@ -47,6 +69,8 @@ bool emergencyActive = START_IN_EMERGENCY;
 bool allowGpsFix = true;
 bool loraReady = false;
 bool usingSimulatedFix = false;
+bool buttonDebounced = false;
+unsigned long buttonDebounceTime = 0;
 
 double simLat = 12.9750;
 double simLng = 77.5946;
@@ -190,18 +214,45 @@ void handleSerial() {
 
 void handleEmergencyButton() {
   bool pressed = digitalRead(EMERGENCY_BUTTON_PIN) == LOW;
-  if (pressed && lastButtonState) {
+  if (pressed && !buttonDebounced && millis() - buttonDebounceTime > 50) {
+    buttonDebounced = true;
+    buttonDebounceTime = millis();
     emergencyActive = !emergencyActive;
     Serial.print("Button toggled emergency=");
     Serial.println(emergencyActive ? "ON" : "OFF");
-    delay(250);
+    
+    // Beep buzzer on state change
+    digitalWrite(BUZZER_PIN, HIGH);
+    delay(100);
+    digitalWrite(BUZZER_PIN, LOW);
+  }
+  if (!pressed) {
+    buttonDebounced = false;
   }
   lastButtonState = !pressed;
+}
+
+void updateIndicators() {
+  // Status LED: ON when emergency active, OFF when normal
+  digitalWrite(STATUS_LED_PIN, emergencyActive ? HIGH : LOW);
+  
+  // Buzzer: Short beep every 3 seconds when emergency active
+  static unsigned long lastBuzzerAt = 0;
+  if (emergencyActive && millis() - lastBuzzerAt > 3000) {
+    lastBuzzerAt = millis();
+    digitalWrite(BUZZER_PIN, HIGH);
+    delay(50);
+    digitalWrite(BUZZER_PIN, LOW);
+  }
 }
 
 void setup() {
   Serial.begin(115200);
   pinMode(EMERGENCY_BUTTON_PIN, INPUT_PULLUP);
+  pinMode(STATUS_LED_PIN, OUTPUT);
+  pinMode(BUZZER_PIN, OUTPUT);
+  digitalWrite(STATUS_LED_PIN, LOW);
+  digitalWrite(BUZZER_PIN, LOW);
   gpsSerial.begin(9600, SERIAL_8N1, GPS_RX_PIN, GPS_TX_PIN);
 
   LoRa.setPins(LORA_SS_PIN, LORA_RST_PIN, LORA_DIO0_PIN);
@@ -224,6 +275,7 @@ void loop() {
 
   handleSerial();
   handleEmergencyButton();
+  updateIndicators();
 
   unsigned long now = millis();
   if (now - lastBroadcastAt >= BROADCAST_INTERVAL_MS) {

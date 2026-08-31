@@ -10,6 +10,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -38,6 +40,7 @@ fun HospitalSearchScreen(
     var isLoading by remember { mutableStateOf(false) }
     var currentLocation by remember { mutableStateOf<LatLng?>(null) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
+    var isTrackingLocation by remember { mutableStateOf(false) }
 
     // Get current location on load
     LaunchedEffect(Unit) {
@@ -65,6 +68,20 @@ fun HospitalSearchScreen(
                     }
             }
         isLoading = false
+    }
+
+    // Simulate real-time location updates (for demo)
+    LaunchedEffect(isTrackingLocation) {
+        if (isTrackingLocation && currentLocation != null) {
+            kotlinx.coroutines.delay(3000) // Update every 3 seconds
+            // In production, this would be actual GPS updates
+            if (currentLocation != null) {
+                hospitalDiscoveryService.findNearbyHospitals(currentLocation!!)
+                    .onSuccess { updatedHospitals ->
+                        hospitals = updatedHospitals.sortedBy { it.distance }
+                    }
+            }
+        }
     }
 
     // Search functionality with debouncing
@@ -135,31 +152,51 @@ fun HospitalSearchScreen(
 
             // Location info
             currentLocation?.let { location ->
-                Box(
+                Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp)
-                        .background(
-                            color = HospitalGreen.copy(alpha = 0.1f),
-                            shape = RoundedCornerShape(8.dp)
-                        )
-                        .padding(12.dp)
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    Box(
+                        modifier = Modifier
+                            .background(
+                                color = HospitalGreen.copy(alpha = 0.1f),
+                                shape = RoundedCornerShape(8.dp)
+                            )
+                            .padding(12.dp)
                     ) {
-                        Box(
-                            modifier = Modifier
-                                .size(8.dp)
-                                .clip(CircleShape)
-                                .background(HospitalGreen)
-                        )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(8.dp)
+                                    .clip(CircleShape)
+                                    .background(HospitalGreen)
+                            )
+                            Text(
+                                text = "Location: ${location.latitude}, ${location.longitude}",
+                                color = TextPrimary,
+                                fontSize = 12.sp,
+                                fontFamily = FontFamily.Monospace
+                            )
+                        }
+                    }
+                    Button(
+                        onClick = { isTrackingLocation = !isTrackingLocation },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = if (isTrackingLocation) HospitalGreen else ElevatedCard,
+                            contentColor = Color.White
+                        ),
+                        shape = RoundedCornerShape(8.dp),
+                        modifier = Modifier.height(36.dp)
+                    ) {
                         Text(
-                            text = "Location: ${location.latitude}, ${location.longitude}",
-                            color = TextPrimary,
-                            fontSize = 12.sp,
-                            fontFamily = FontFamily.Monospace
+                            text = if (isTrackingLocation) "📍 Tracking" else "📍 Track",
+                            fontSize = 12.sp
                         )
                     }
                 }
