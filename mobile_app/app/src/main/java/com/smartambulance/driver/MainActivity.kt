@@ -68,6 +68,9 @@ class MainActivity : ComponentActivity() {
     private var policeAlert by mutableStateOf("Waiting for a junction alert.")
     private var hospitalAlert by mutableStateOf("Waiting for a hospital alert.")
     private var telemetry by mutableStateOf("Waiting for live ambulance location.")
+    private var ambulanceLocation by mutableStateOf<Pair<Double?, Double?>>(null to null)
+    private var driverCurrentLocation by mutableStateOf<Pair<Double?, Double?>>(null to null)
+    private var loraTelemetry by mutableStateOf<Pair<Double?, Double?>>(null to null)
     private var readiness by mutableStateOf("Mark each bay item as the receiving team gets ready.")
     private var adminMessage by mutableStateOf("Ready to register project data in Firebase.")
     private var adminRecords by mutableStateOf("Loading Firebase records...")
@@ -75,6 +78,7 @@ class MainActivity : ComponentActivity() {
 
     private var alertListener: ValueEventListener? = null
     private var ambulanceListener: ValueEventListener? = null
+    private var loraTelemetryListener: ValueEventListener? = null
 
     private val locationPublisher = object : Runnable {
         override fun run() {
@@ -144,6 +148,8 @@ class MainActivity : ComponentActivity() {
                         selectedSeverity = selectedSeverity,
                         selectedHospital = selectedHospital,
                         status = status,
+                        currentLocation = loraTelemetry,
+                        dataSource = "LoRa GPS",
                         onSeverityChange = { selectedSeverity = it },
                         onHospitalChange = {
                             selectedHospital = it
@@ -159,6 +165,7 @@ class MainActivity : ComponentActivity() {
                         junctionId = current.assignedJunctionId ?: "JNC001",
                         alert = policeAlert,
                         telemetry = telemetry,
+                        ambulanceLocation = loraTelemetry,
                         onRefresh = { bindPolice(current) },
                         onLogout = { logout() }
                     )
@@ -411,6 +418,7 @@ class MainActivity : ComponentActivity() {
                 val distance = snapshot.child("lastLoRaTelemetry").child("distanceMeters").value?.toString() ?: "--"
                 val rssi = snapshot.child("lastLoRaTelemetry").child("rssi").value?.toString() ?: "--"
                 telemetry = "Destination  $hospital\nSeverity  $severity\nLocation  ${lat ?: "--"}, ${lng ?: "--"}\nApproach  $distance m  ·  RSSI $rssi dBm"
+                ambulanceLocation = lat to lng
             }
 
             override fun onCancelled(error: DatabaseError) {
@@ -419,6 +427,41 @@ class MainActivity : ComponentActivity() {
         }
         ambulanceListener = listener
         repository.observeAmbulance("AMB001", listener)
+        
+        // Also bind to LoRa telemetry from Receiver ESP32
+        bindLoRaTelemetry()
+    }
+    
+    private fun bindLoRaTelemetry() {
+        val listener = object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                // This data comes from Receiver ESP32 which received it from Ambulance ESP32 Transmitter via LoRa
+                val lat = snapshot.child("lat").getValue(Double::class.java)
+                val lng = snapshot.child("lng").getValue(Double::class.java)
+                val speed = snapshot.child("speedKmph").getValue(Double::class.java)
+                val heading = snapshot.child("headingDeg").getValue(Double::class.java)
+                val distance = snapshot.child("distanceMeters").getValue(Double::class.java)
+                val bearing = snapshot.child("bearingToJunctionDeg").getValue(Double::class.java)
+                val gpsFix = snapshot.child("gpsFix").getValue(Boolean::class.java) ?: false
+                
+                // Store LoRa telemetry for dashboards
+                loraTelemetry = lat to lng
+                
+                // Update telemetry string with LoRa data
+                telemetry = "LoRa GPS: ${lat ?: "--"}, ${lng ?: "--"}\n" +
+                            "Speed: ${speed ?: "--"} km/h\n" +
+                            "Heading: ${heading ?: "--"}°\n" +
+                            "Distance: ${distance ?: "--"} m\n" +
+                            "Bearing: ${bearing ?: "--"}°\n" +
+                            "GPS Fix: ${if (gpsFix) "YES" else "NO"}"
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                telemetry = "LoRa telemetry error: ${error.message}"
+            }
+        }
+        loraTelemetryListener = listener
+        repository.observeLoRaTelemetry("JNC001", "AMB001", listener)
     }
 
     private fun adminActions() = AdminActions(
@@ -530,6 +573,7 @@ class MainActivity : ComponentActivity() {
                     return@addOnSuccessListener
                 }
                 repository.updateLocation(ambulanceId, location.latitude, location.longitude)
+                driverCurrentLocation = location.latitude to location.longitude
                 gps = "GPS: ${"%.5f".format(location.latitude)}, ${"%.5f".format(location.longitude)}"
                 
                 // Publish location via MQTT if connected

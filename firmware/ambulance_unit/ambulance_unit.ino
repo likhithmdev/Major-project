@@ -19,6 +19,11 @@
     * GND: GND
     * TX: GPIO 16 (RX2)
     * RX: GPIO 17 (TX2)
+  - OLED Display (SSD1306 128x64):
+    * VCC: 3.3V
+    * GND: GND
+    * SDA: GPIO 21
+    * SCL: GPIO 22
   - Status LED: GPIO 25 (with 220Ω resistor)
   - Active Buzzer: GPIO 26
   - Emergency Button: GPIO 33 (with internal pullup)
@@ -28,6 +33,9 @@
   - LoRa by Sandeep Mistry
   - TinyGPSPlus by Mikal Hart
   - ArduinoJson by Benoit Blanchon
+  - Adafruit SSD1306
+  - Adafruit GFX Library
+  - Wire (built-in)
 
   Serial commands (115200):
     EMERGENCY ON
@@ -45,6 +53,9 @@
 #include <LoRa.h>
 #include <TinyGPS++.h>
 #include <ArduinoJson.h>
+#include <Wire.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
 
 // Configurable ambulance and trip IDs (can be changed via Serial commands)
 String AMBULANCE_ID = "AMB001";
@@ -58,6 +69,13 @@ const int GPS_RX_PIN = 16;
 const int GPS_TX_PIN = 17;
 const int STATUS_LED_PIN = 25;
 const int BUZZER_PIN = 26;
+
+// OLED Display Configuration
+#define SCREEN_WIDTH 128
+#define SCREEN_HEIGHT 64
+#define OLED_RESET -1
+#define SCREEN_ADDRESS 0x3C
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
 const unsigned long BROADCAST_INTERVAL_MS = 1000;
 const bool START_IN_EMERGENCY = true;
@@ -126,6 +144,9 @@ void broadcastPacket() {
 
   Serial.print("[TX] ");
   Serial.println(payload);
+  
+  // Update OLED display
+  updateDisplay(lat, lng, speedKmph, headingDeg, gpsFix);
 }
 
 void printStatus() {
@@ -246,6 +267,77 @@ void updateIndicators() {
   }
 }
 
+void updateDisplay(double lat, double lng, float speed, float heading, bool gpsFix) {
+  display.clearDisplay();
+  
+  // Header line
+  display.setTextSize(1);
+  display.setTextColor(SSD1306_WHITE);
+  display.setCursor(0, 0);
+  display.print("AMB: ");
+  display.print(AMBULANCE_ID);
+  
+  // Emergency status
+  display.setCursor(90, 0);
+  if (emergencyActive) {
+    display.setTextColor(SSD1306_WHITE, SSD1306_BLACK); // Inverted text
+    display.print("EMERGENCY");
+    display.setTextColor(SSD1306_WHITE);
+  } else {
+    display.print("NORMAL");
+  }
+  
+  // GPS coordinates
+  display.setCursor(0, 12);
+  display.print("LAT: ");
+  display.println(lat, 6);
+  display.setCursor(0, 22);
+  display.print("LNG: ");
+  display.println(lng, 6);
+  
+  // Speed and heading
+  display.setCursor(0, 32);
+  display.print("SPD: ");
+  display.print(speed, 1);
+  display.println(" km/h");
+  display.setCursor(0, 42);
+  display.print("HDG: ");
+  display.print(heading, 1);
+  display.println(" deg");
+  
+  // GPS fix status
+  display.setCursor(0, 52);
+  display.print("GPS: ");
+  if (gpsFix) {
+    display.println("FIXED");
+  } else {
+    display.println("NO FIX");
+  }
+  
+  // LoRa status
+  display.setCursor(70, 52);
+  display.print("LoRa: ");
+  display.println(loraReady ? "OK" : "FAIL");
+  
+  display.display();
+}
+
+void initDisplay() {
+  if (!display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS)) {
+    Serial.println("SSD1306 allocation failed");
+    return;
+  }
+  
+  display.clearDisplay();
+  display.setTextSize(1);
+  display.setTextColor(SSD1306_WHITE);
+  display.setCursor(0, 0);
+  display.println("Smart Ambulance");
+  display.println("System Initializing...");
+  display.display();
+  delay(2000);
+}
+
 void setup() {
   Serial.begin(115200);
   pinMode(EMERGENCY_BUTTON_PIN, INPUT_PULLUP);
@@ -254,6 +346,12 @@ void setup() {
   digitalWrite(STATUS_LED_PIN, LOW);
   digitalWrite(BUZZER_PIN, LOW);
   gpsSerial.begin(9600, SERIAL_8N1, GPS_RX_PIN, GPS_TX_PIN);
+
+  // Initialize I2C for OLED
+  Wire.begin(21, 22);
+  
+  // Initialize OLED display
+  initDisplay();
 
   LoRa.setPins(LORA_SS_PIN, LORA_RST_PIN, LORA_DIO0_PIN);
   loraReady = LoRa.begin(433E6);
@@ -266,6 +364,9 @@ void setup() {
   Serial.println("Ambulance GPS-LoRa unit ready.");
   Serial.println("Commands: EMERGENCY ON | EMERGENCY OFF | SIM lat,lng,heading,speed | GPS OFF | GPS ON | STATUS");
   printStatus();
+  
+  // Initial display update
+  updateDisplay(simLat, simLng, simSpeedKmph, simHeadingDeg, false);
 }
 
 void loop() {

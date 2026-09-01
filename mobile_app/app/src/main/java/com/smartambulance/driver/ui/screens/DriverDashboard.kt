@@ -59,6 +59,8 @@ fun DriverDashboard(
     selectedSeverity: String,
     selectedHospital: HospitalOption,
     status: String,
+    currentLocation: Pair<Double?, Double?> = null to null,
+    dataSource: String = "Phone GPS",
     onSeverityChange: (String) -> Unit,
     onHospitalChange: (HospitalOption) -> Unit,
     onStartEmergency: () -> Unit,
@@ -190,7 +192,7 @@ fun DriverDashboard(
                 onEndEmergency = onEndEmergency
             )
             1 -> NavigateTab(selectedHospital = selectedHospital, onGetLocation = onSearchHospital)
-            2 -> StatusTab(user = user, selectedHospital = selectedHospital)
+            2 -> StatusTab(user = user, selectedHospital = selectedHospital, currentLocation = currentLocation, dataSource = dataSource)
         }
     }
 }
@@ -466,7 +468,7 @@ fun NavigateTab(
 }
 
 @Composable
-fun StatusTab(user: AppUser, selectedHospital: HospitalOption) {
+fun StatusTab(user: AppUser, selectedHospital: HospitalOption, currentLocation: Pair<Double?, Double?> = null to null, dataSource: String = "Phone GPS") {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -553,6 +555,44 @@ fun StatusTab(user: AppUser, selectedHospital: HospitalOption) {
                         text = "ACTIVE",
                         backgroundColor = PrimaryRed.copy(alpha = 0.2f),
                         textColor = PrimaryRed
+                    )
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+                Row(
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = "Data Source",
+                        color = TextMuted,
+                        fontSize = 12.sp
+                    )
+                    Text(
+                        text = dataSource,
+                        color = if (dataSource == "LoRa GPS") SuccessGreen else SecondaryAmber,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+                Row(
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = "Current Location",
+                        color = TextMuted,
+                        fontSize = 12.sp
+                    )
+                    Text(
+                        text = if (currentLocation.first != null && currentLocation.second != null) {
+                            "${String.format("%.4f", currentLocation.first)}°N, ${String.format("%.4f", currentLocation.second)}°E"
+                        } else {
+                            "Waiting for GPS..."
+                        },
+                        color = DriverRed,
+                        fontSize = 12.sp,
+                        fontFamily = FontFamily.Monospace
                     )
                 }
             }

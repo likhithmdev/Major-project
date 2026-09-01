@@ -51,6 +51,7 @@ fun PoliceDashboard(
     junctionId: String,
     alert: String,
     telemetry: String,
+    ambulanceLocation: Pair<Double?, Double?> = null to null,
     onRefresh: () -> Unit,
     onLogout: () -> Unit
 ) {
@@ -157,7 +158,7 @@ fun PoliceDashboard(
 
         // Tab Content
         when (selectedTab) {
-            0 -> LiveMapTab(alert = alert, telemetry = telemetry)
+            0 -> LiveMapTab(alert = alert, telemetry = telemetry, ambulanceLocation = ambulanceLocation)
             1 -> JunctionsTab(onRefresh = onRefresh)
             2 -> AlertsTab(alert = alert)
         }
@@ -165,7 +166,149 @@ fun PoliceDashboard(
 }
 
 @Composable
-fun LiveMapTab(alert: String, telemetry: String) {
+fun AmbulanceCard(
+    ambulanceId: String,
+    priority: String,
+    eta: String,
+    speed: String,
+    driver: String,
+    rfidStatus: String,
+    rssi: String,
+    hospital: String,
+    location: Pair<Double?, Double?> = null to null
+) {
+    val priorityColor = when (priority) {
+        "P1" -> PrimaryRed
+        "P2" -> SecondaryAmber
+        else -> PoliceBlue
+    }
+    
+    val rfidColor = if (rfidStatus == "CONNECTED") SuccessGreen else TextDim
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(
+                color = CardBackground,
+                shape = RoundedCornerShape(12.dp)
+            )
+            .padding(16.dp)
+    ) {
+        Column {
+            Row(
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    StatusBadge(
+                        text = priority,
+                        backgroundColor = priorityColor.copy(alpha = 0.2f),
+                        textColor = priorityColor
+                    )
+                    Text(
+                        text = ambulanceId,
+                        color = TextPrimary,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        fontFamily = FontFamily.Monospace
+                    )
+                }
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(
+                        text = eta,
+                        color = SecondaryAmber,
+                        fontSize = 12.sp,
+                        fontFamily = FontFamily.Monospace
+                    )
+                    Text(
+                        text = speed,
+                        color = SuccessGreen,
+                        fontSize = 12.sp,
+                        fontFamily = FontFamily.Monospace
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+            Row(
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    text = driver,
+                    color = TextMuted,
+                    fontSize = 12.sp
+                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(6.dp)
+                            .clip(CircleShape)
+                            .background(rfidColor)
+                    )
+                    Text(
+                        text = "RFID",
+                        color = TextMuted,
+                        fontSize = 10.sp
+                    )
+                    Text(
+                        text = rssi,
+                        color = TextMuted,
+                        fontSize = 10.sp,
+                        fontFamily = FontFamily.Monospace
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+            Row(
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    text = hospital,
+                    color = TextPrimary,
+                    fontSize = 12.sp
+                )
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+            Row(
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    text = "Location",
+                    color = TextMuted,
+                    fontSize = 10.sp
+                )
+                Text(
+                    text = if (location.first != null && location.second != null) {
+                        "${String.format("%.4f", location.first)}°N, ${String.format("%.4f", location.second)}°E"
+                    } else {
+                        "Waiting for GPS..."
+                    },
+                    color = PoliceBlue,
+                    fontSize = 10.sp,
+                    fontFamily = FontFamily.Monospace
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun LiveMapTab(alert: String, telemetry: String, ambulanceLocation: Pair<Double?, Double?> = null to null) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -202,204 +345,30 @@ fun LiveMapTab(alert: String, telemetry: String) {
 
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             // Ambulance Card 1
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(
-                        color = CardBackground,
-                        shape = RoundedCornerShape(12.dp)
-                    )
-                    .padding(16.dp)
-            ) {
-                Column {
-                    Row(
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            StatusBadge(
-                                text = "P1",
-                                backgroundColor = PrimaryRed.copy(alpha = 0.2f),
-                                textColor = PrimaryRed
-                            )
-                            Text(
-                                text = "AMB001",
-                                color = TextPrimary,
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                fontFamily = FontFamily.Monospace
-                            )
-                        }
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            Text(
-                                text = "8 min",
-                                color = SecondaryAmber,
-                                fontSize = 12.sp,
-                                fontFamily = FontFamily.Monospace
-                            )
-                            Text(
-                                text = "42 km/h",
-                                color = SuccessGreen,
-                                fontSize = 12.sp,
-                                fontFamily = FontFamily.Monospace
-                            )
-                        }
-                    }
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Row(
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text(
-                            text = "Driver One",
-                            color = TextMuted,
-                            fontSize = 12.sp
-                        )
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(6.dp)
-                                    .clip(CircleShape)
-                                    .background(SuccessGreen)
-                            )
-                            Text(
-                                text = "RFID",
-                                color = TextMuted,
-                                fontSize = 10.sp
-                            )
-                            Text(
-                                text = "-72 dBm",
-                                color = TextMuted,
-                                fontSize = 10.sp,
-                                fontFamily = FontFamily.Monospace
-                            )
-                        }
-                    }
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Row(
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text(
-                            text = "City Care Hospital",
-                            color = TextPrimary,
-                            fontSize = 12.sp
-                        )
-                    }
-                }
-            }
+            AmbulanceCard(
+                ambulanceId = "AMB001",
+                priority = "P1",
+                eta = "8 min",
+                speed = "42 km/h",
+                driver = "Driver One",
+                rfidStatus = "CONNECTED",
+                rssi = "-72 dBm",
+                hospital = "City Care Hospital",
+                location = ambulanceLocation
+            )
 
             // Ambulance Card 2
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(
-                        color = CardBackground,
-                        shape = RoundedCornerShape(12.dp)
-                    )
-                    .padding(16.dp)
-            ) {
-                Column {
-                    Row(
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            StatusBadge(
-                                text = "P2",
-                                backgroundColor = SecondaryAmber.copy(alpha = 0.2f),
-                                textColor = SecondaryAmber
-                            )
-                            Text(
-                                text = "AMB002",
-                                color = TextPrimary,
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                fontFamily = FontFamily.Monospace
-                            )
-                        }
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            Text(
-                                text = "12 min",
-                                color = SecondaryAmber,
-                                fontSize = 12.sp,
-                                fontFamily = FontFamily.Monospace
-                            )
-                            Text(
-                                text = "35 km/h",
-                                color = SuccessGreen,
-                                fontSize = 12.sp,
-                                fontFamily = FontFamily.Monospace
-                            )
-                        }
-                    }
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Row(
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text(
-                            text = "Driver Two",
-                            color = TextMuted,
-                            fontSize = 12.sp
-                        )
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(6.dp)
-                                    .clip(CircleShape)
-                                    .background(TextDim)
-                            )
-                            Text(
-                                text = "RFID",
-                                color = TextMuted,
-                                fontSize = 10.sp
-                            )
-                            Text(
-                                text = "-65 dBm",
-                                color = TextMuted,
-                                fontSize = 10.sp,
-                                fontFamily = FontFamily.Monospace
-                            )
-                        }
-                    }
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Row(
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text(
-                            text = "Metro Emergency Center",
-                            color = TextPrimary,
-                            fontSize = 12.sp
-                        )
-                    }
-                }
-            }
+            AmbulanceCard(
+                ambulanceId = "AMB002",
+                priority = "P2",
+                eta = "12 min",
+                speed = "35 km/h",
+                driver = "Driver Two",
+                rfidStatus = "CONNECTED",
+                rssi = "-65 dBm",
+                hospital = "Metro Emergency Center",
+                location = null to null
+            )
         }
     }
 }

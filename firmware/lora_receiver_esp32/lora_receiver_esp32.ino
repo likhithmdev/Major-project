@@ -1,7 +1,7 @@
 /*
   ESP32 LoRa Receiver for Smart Ambulance System
   Receives GPS data from ambulance via LoRa, calculates distance/bearing,
-  and sends commands to Arduino traffic controller via UART
+  sends commands to Arduino traffic controller via UART, and uploads to Firebase
 
   Hardware:
   - LoRa SX1278 (433MHz):
@@ -16,11 +16,24 @@
   - UART to Arduino (Serial2):
     * TX2 (GPIO 17): Connect to Arduino RX
     * RX2 (GPIO 16): Connect to Arduino TX
+  - WiFi (built-in):
+    * Connect to WiFi network for Firebase integration
 
   Commands sent to Arduino via UART:
   - "AMBULANCE_APPROACH,<signal_id>" - Ambulance approaching, preempt specified signal
   - "AMBULANCE_EXIT" - Ambulance cleared junction, restore normal traffic
   - "AMBULANCE_OUT_OF_RANGE" - Ambulance out of range, normal operations
+
+  Firebase Integration:
+  - Uploads LoRa telemetry to Firebase Realtime Database
+  - Path: loraTelemetry/JNC001/{ambulanceId}
+  - Rate limited to 2 seconds between uploads
+
+  Configuration Required:
+  - WIFI_SSID: Your WiFi network name
+  - WIFI_PASSWORD: Your WiFi password
+  - FIREBASE_HOST: Your Firebase project host
+  - FIREBASE_AUTH: Your Firebase database secret
 
   Note: Expects JSON packets from ambulance: {"ambulanceId":"AMB001","tripId":"TRIP001","lat":12.975,"lng":77.5946,...}
 */
@@ -29,6 +42,9 @@
 #include <LoRa.h>
 #include <ArduinoJson.h>
 #include <math.h>
+#include <WiFi.h>
+#include <HTTPClient.h>
+#include <WiFiClientSecure.h>
 
 // LoRa SPI Pins
 #define LORA_SS    5
@@ -43,6 +59,17 @@
 #define ARDUINO_TX_PIN 17
 #define ARDUINO_RX_PIN 16
 
+// WiFi Configuration
+// SECURITY NOTE: These credentials are for development only. For production,
+// consider using environment variables or a separate secrets.h file.
+const char* WIFI_SSID = "Kamlesh";
+const char* WIFI_PASSWORD = "12345678";
+
+// Firebase Configuration
+// SECURITY NOTE: The database secret should be kept secure and rotated regularly.
+const char* FIREBASE_HOST = "smart-ambulance-36f9d-default-rtdb.firebaseio.com";
+const char* FIREBASE_AUTH = "GqHTgXInKc0BSkmZXhoLyyNYObY4Vtr1cywYdD1i";
+
 // Junction Reference Coordinates
 const float JUNCTION_LAT = 13.013123; 
 const float JUNCTION_LON = 77.629112; 
@@ -53,6 +80,25 @@ bool ambulanceInZone = false;
 bool approachingSignal = false;
 unsigned long lastPacketTime = 0;
 const unsigned long PACKET_TIMEOUT_MS = 5000; // 5 seconds without packet = out of range
+
+// LoRa data structure for Firebase
+struct LoRaData {
+  String ambulanceId;
+  String tripId;
+  double lat;
+  double lng;
+  float speedKmph;
+  float headingDeg;
+  bool gpsFix;
+  float distanceMeters;
+  float bearingToJunction;
+  unsigned long timestamp;
+};
+
+// Firebase state
+bool wifiConnected = false;
+unsigned long lastFirebaseUpload = 0;
+const unsigned long FIREBASE_UPLOAD_INTERVAL_MS = 2000; // Upload every 2 seconds
 
 float toRadians(float deg) { return deg * PI / 180.0; }
 float toDegrees(float rad) { return rad * 180.0 / PI; }
@@ -105,6 +151,97 @@ void sendToArduino(const char* command) {
     Serial.println(command);
 }
 
+void sendToFirebase(LoRaData data) {
+    if (!wifiConnected) return;
+    
+    WiFiClientSecure client;
+    client.setInsecure(); // For HTTPS (use certificate in production)
+    HTTPClient http;
+    
+    // Upload to loraTelemetry path (junction-specific telemetry)
+    String loraPath = "loraTelemetry/JNC001/" + data.ambulanceId;
+    String loraUrl = "https://" + String(FIREBASE_HOST) + "/" + loraPath + ".json";
+    
+    if (http.begin(client, loraUrl)) {
+        http.addHeader("Content-Type", "application/json");
+        http.setTimeout(2000);
+        
+        StaticJsonDocument<512> doc;
+        doc["ambulanceId"] = data.ambulanceId;
+        doc["tripId"] = data.tripId;
+        doc["lat"] = data.lat;
+        doc["lng"] = data.lng;
+        doc["speedKmph"] = data.speedKmph;
+        doc["headingDeg"] = data.headingDeg;
+        doc["gpsFix"] = data.gpsFix;
+        doc["distanceMeters"] = data.distanceMeters;
+        doc["bearingToJunctionDeg"] = data.bearingToJunction;
+        doc["approaching"] = data.distanceMeters <= 500.0;
+        doc["preemptionEligible"] = data.distanceMeters <= 500.0;
+        doc["timestamp"] = data.timestamp;
+        doc["updatedAt"] = millis();
+        
+        String payload;
+        serializeJson(doc, payload);
+        
+        int httpResponseCode = http.PATCH(payload);
+        if (httpResponseCode > 0) {
+            Serial.print("Firebase LoRa response: ");
+            Serial.println(httpResponseCode);
+        } else {
+            Serial.print("Firebase LoRa error: ");
+            Serial.println(http.errorToString(httpResponseCode));
+        }
+        http.end();
+    }
+    
+    // Upload to ambulances path (general ambulance location for mobile app)
+    String ambulancePath = "ambulances/" + data.ambulanceId + "/lastLocation";
+    String ambulanceUrl = "https://" + String(FIREBASE_HOST) + "/" + ambulancePath + ".json";
+    
+    if (http.begin(client, ambulanceUrl)) {
+        http.addHeader("Content-Type", "application/json");
+        http.setTimeout(2000);
+        
+        StaticJsonDocument<256> locationDoc;
+        locationDoc["lat"] = data.lat;
+        locationDoc["lng"] = data.lng;
+        locationDoc["updatedAt"] = millis();
+        
+        String locationPayload;
+        serializeJson(locationDoc, locationPayload);
+        
+        int httpResponseCode = http.PATCH(locationPayload);
+        if (httpResponseCode > 0) {
+            Serial.print("Firebase ambulance location response: ");
+            Serial.println(httpResponseCode);
+        } else {
+            Serial.print("Firebase ambulance location error: ");
+            Serial.println(http.errorToString(httpResponseCode));
+        }
+        http.end();
+    }
+}
+
+void handleWiFi() {
+    if (WiFi.status() != WL_CONNECTED) {
+        wifiConnected = false;
+        static unsigned long lastWifiAttempt = 0;
+        if (millis() - lastWifiAttempt > 10000) {
+            lastWifiAttempt = millis();
+            Serial.println("Attempting to reconnect to WiFi...");
+            WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+        }
+    } else {
+        if (!wifiConnected) {
+            wifiConnected = true;
+            Serial.println("WiFi connected!");
+            Serial.print("IP address: ");
+            Serial.println(WiFi.localIP());
+        }
+    }
+}
+
 void setup() {
     Serial.begin(115200);
     while (!Serial);
@@ -113,6 +250,27 @@ void setup() {
     ARDUINO_UART.begin(ARDUINO_BAUD, SERIAL_8N1, ARDUINO_RX_PIN, ARDUINO_TX_PIN);
 
     Serial.println("--- ESP32 LoRa Receiver for Smart Ambulance ---");
+    Serial.println("Initializing WiFi...");
+
+    // Initialize WiFi
+    WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+    Serial.print("Connecting to WiFi");
+    int wifiAttempts = 0;
+    while (WiFi.status() != WL_CONNECTED && wifiAttempts < 20) {
+        delay(500);
+        Serial.print(".");
+        wifiAttempts++;
+    }
+    
+    if (WiFi.status() == WL_CONNECTED) {
+        wifiConnected = true;
+        Serial.println(" connected!");
+        Serial.print("IP address: ");
+        Serial.println(WiFi.localIP());
+    } else {
+        Serial.println(" failed. Will retry later.");
+    }
+
     Serial.println("Initializing LoRa Receiver Module...");
 
     // Initialize LoRa Receiver Module
@@ -123,9 +281,13 @@ void setup() {
     }
     Serial.println("✅ LoRa Receiver Active. Listening for ambulance data...");
     Serial.println("✅ UART to Arduino ready at 9600 baud");
+    Serial.println("✅ Firebase integration ready (when WiFi connected)");
 }
 
 void loop() {
+    // Handle WiFi connection
+    handleWiFi();
+    
     int packetSize = LoRa.parsePacket();
     if (packetSize) {
         String packetData = "";
@@ -158,6 +320,25 @@ void loop() {
             Serial.print("GPS Fix: "); Serial.println(gpsFix ? "YES" : "NO");
             Serial.print("Calculated Distance: "); Serial.print(distance, 2); Serial.println(" meters");
             Serial.print("Calculated Angle   : "); Serial.print(angle, 2); Serial.println(" degrees");
+
+            // Create LoRa data structure for Firebase
+            LoRaData data;
+            data.ambulanceId = ambulanceId;
+            data.tripId = tripId;
+            data.lat = ambLat;
+            data.lng = ambLon;
+            data.speedKmph = ambSpeed;
+            data.headingDeg = headingDeg;
+            data.gpsFix = gpsFix;
+            data.distanceMeters = distance;
+            data.bearingToJunction = angle;
+            data.timestamp = millis();
+
+            // Send to Firebase (with rate limiting)
+            if (millis() - lastFirebaseUpload > FIREBASE_UPLOAD_INTERVAL_MS) {
+                lastFirebaseUpload = millis();
+                sendToFirebase(data);
+            }
 
             // Evaluate if preemption threshold is breached
             if (distance <= TRIGGER_DISTANCE) {

@@ -832,4 +832,8 @@ class DemoRepository {
     fun observeAmbulance(ambulanceId: String, listener: ValueEventListener) {
         database.child(FirebasePaths.AMBULANCES).child(ambulanceId).addValueEventListener(listener)
     }
+    
+    fun observeLoRaTelemetry(junctionId: String, ambulanceId: String, listener: ValueEventListener) {
+        database.child(FirebasePaths.LORA_TELEMETRY).child(junctionId).child(ambulanceId).addValueEventListener(listener)
+    }
 }

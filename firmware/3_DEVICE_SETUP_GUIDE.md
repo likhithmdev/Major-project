@@ -30,6 +30,12 @@ Your system now uses **3 separate devices**:
 - TX → GPIO 16 (RX2)
 - RX → GPIO 17 (TX2)
 
+**OLED Display (SSD1306 128x64):**
+- VCC → 3.3V
+- GND → GND
+- SDA → GPIO 21
+- SCL → GPIO 22
+
 **Status LED:**
 - Long leg (+) → GPIO 25 (with 220Ω resistor)
 - Short leg (-) → GND
@@ -37,6 +43,12 @@ Your system now uses **3 separate devices**:
 **Active Buzzer:**
 - (+) Pin → GPIO 26
 - (-) Pin → GND
+
+**OLED Display (SSD1306 128x64):**
+- VCC → 3.3V
+- GND → GND
+- SDA → GPIO 21
+- SCL → GPIO 22
 
 **Emergency Button:**
 - Pin A → GPIO 33
@@ -197,10 +209,25 @@ The Arduino receives these commands via Serial (9600 baud):
 Edit `firmware/lora_receiver_esp32/lora_receiver_esp32.ino`:
 
 ```cpp
+// WiFi Configuration
+const char* WIFI_SSID = "your_wifi_ssid";
+const char* WIFI_PASSWORD = "your_wifi_password";
+
+// Firebase Configuration
+const char* FIREBASE_HOST = "smart-ambulance-36f9d-default-rtdb.firebaseio.com";
+const char* FIREBASE_AUTH = "your_firebase_database_secret";
+
+// Junction Configuration
 const float JUNCTION_LAT = 13.013123;  // Your junction latitude
 const float JUNCTION_LON = 77.629112;  // Your junction longitude
 const float TRIGGER_DISTANCE = 500.0;  // Trigger distance in meters
 ```
+
+**To get Firebase credentials:**
+1. Go to Firebase Console → Project Settings
+2. Copy your Firebase project host
+3. Go to Service Accounts → Database Secrets
+4. Copy your database secret
 
 ### Arduino Traffic Controller Settings
 Edit `firmware/arduino_traffic_controller/arduino_traffic_controller.ino`:
@@ -229,18 +256,33 @@ String TRIP_ID = "TRIP001";      // Your trip ID
 
 ### 1. Test Ambulance ESP32
 - Upload `ambulance_unit.ino`
+- Install required libraries:
+  - LoRa by Sandeep Mistry
+  - TinyGPSPlus by Mikal Hart
+  - ArduinoJson by Benoit Blanchon
+  - Adafruit SSD1306
+  - Adafruit GFX Library
+  - Wire (built-in)
 - Open Serial Monitor (115200 baud)
 - Send command: `EMERGENCY ON`
 - Should see GPS data being broadcast via LoRa
 - Test button toggles emergency mode
 - Check LED and buzzer functionality
+- Verify OLED display shows GPS coordinates and emergency status
 
 ### 2. Test ESP32 LoRa Receiver
 - Upload `lora_receiver_esp32.ino`
+- Install required libraries:
+  - LoRa by Sandeep Mistry
+  - ArduinoJson by Benoit Blanchon
+- Configure WiFi credentials in the code
+- Configure Firebase credentials in the code
 - Open Serial Monitor (115200 baud)
+- Should see "WiFi connected!" with IP address
 - Should see "LoRa Receiver Active"
 - When ambulance transmits, should see distance/bearing calculations
 - Should see UART commands being sent to Arduino
+- Should see "Firebase response: 200" for successful uploads
 
 ### 3. Test Arduino Traffic Controller
 - Upload `arduino_traffic_controller.ino`
