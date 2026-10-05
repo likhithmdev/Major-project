@@ -60,7 +60,7 @@ import com.smartambulance.driver.ui.theme.Mute
 import com.smartambulance.driver.ui.theme.Teal
 
 @Composable
-fun LoginScreen(
+fun LegacyLoginScreen(
     userId: String,
     pin: String,
     message: String,
